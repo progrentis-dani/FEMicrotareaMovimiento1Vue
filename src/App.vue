@@ -9,7 +9,7 @@
         :style="{ top: wall.y + 'px', left: wall.x + 'px', width: wall.width + 'px', height: wall.height + 'px' }"
       ></div>
 
-      <!-- Obstáculos -->
+      <!-- obstaculos -->
       <div
         v-for="(obstacle, index) in obstacles"
         :key="index"
@@ -17,7 +17,7 @@
         :style="{ top: obstacle.y + 'px', left: obstacle.x + 'px', width: obstacleSize + 'px', height: obstacleSize + 'px' }"
       ></div>
 
-      <!-- Circulo -->
+      <!-- circulo -->
       <div
         class="circle"
         :style="{ top: posY + 'px', left: posX + 'px' }"
@@ -63,33 +63,33 @@ export default {
       cellSize: 50,
       posX: 0,
       posY: 0,
-      cherryX: 400, // Ajusta esta posición
-      cherryY: 500, // Ajusta esta posición
+      cherryX: 400, 
+      cherryY: 500, 
       velocidad: 5,
       direccionActual: 'right',
       autoMoveInterval: null,
-      walls: [], // Paredes
-      obstacles: [], // Obstáculos 
-      obstacleCount: 6, // Cantidad de obstáculos
+      walls: [], 
+      obstacles: [], 
+      obstacleCount: 6, // cantidad de obstaculos
       obstacleSpeed: 4,
       obstacleSize: 30,
       gameOver: false,
       victory: false,
       circleSize: 30,
-      lives: 3, // Vidas 
-      timeLeft: 60, // Tiempo por vida
+      lives: 3, // vidas 
+      timeLeft: 60, // tiempo por vida
       timer: null, // timer
-      invulnerable: false, // Estado de invulnerabilidad tras colisión
+      invulnerable: false, // invulnerabilidad tras colision
     };
   },
   mounted() {
-    this.generarLaberinto(); // Inicializar paredes y obstáculos
-    this.autoMoveInterval = setInterval(this.mover, 50); // Movimiento automático
-    this.moverObstaculos(); // Movimiento de obstáculos
-    this.startTimer(); // Iniciar timer
+    this.generarLaberinto(); 
+    this.autoMoveInterval = setInterval(this.mover, 50); 
+    this.moverObstaculos(); 
+    this.startTimer(); 
   },
   beforeUnmount() {
-    clearInterval(this.autoMoveInterval); // Limpiar intervalos al desmontar componente
+    clearInterval(this.autoMoveInterval); // 
     clearInterval(this.timer);
   },
   methods: {
@@ -101,7 +101,7 @@ export default {
       const previousX = this.posX;
       const previousY = this.posY;
 
-      // Movimiento automático del círculo
+      // movimiento automatico del circulo
       switch (this.direccionActual) {
         case 'up':
           this.posY -= this.velocidad;
@@ -124,14 +124,14 @@ export default {
       const gameAreaWidth = this.$el.querySelector('.game-area').clientWidth;
       const gameAreaHeight = this.$el.querySelector('.game-area').clientHeight;
 
-      // Limitar el movimiento
+      // limitar el movimiento
       if (this.posX < 0) this.posX = 0;
       if (this.posY < 0) this.posY = 0;
       if (this.posX > gameAreaWidth - this.circleSize) this.posX = gameAreaWidth - this.circleSize;
       if (this.posY > gameAreaHeight - this.circleSize) this.posY = gameAreaHeight - this.circleSize;
     },
     verificarColisiones(previousX, previousY) {
-      // Verificar colisión con el objetivo
+      // verificar colisión
       if (
         this.posX < this.cherryX + this.cellSize &&
         this.posX + this.circleSize > this.cherryX &&
@@ -143,7 +143,7 @@ export default {
         clearInterval(this.timer); // Detener timer
       }
 
-      // Verificar colisión con obstáculos
+      // Verificar colisión con obstaculos
       if (!this.invulnerable) {
         for (let obstacle of this.obstacles) {
           if (
@@ -152,12 +152,12 @@ export default {
             this.posY < obstacle.y + this.obstacleSize &&
             this.posY + this.circleSize > obstacle.y
           ) {
-            this.loseLife(); // Perder una vida al chocar con un obstáculo
+            this.loseLife(); // Perder una vida al chocar
           }
         }
       }
 
-      // Verificar colisión con paredes
+      // Verificar colision con paredes
       for (let wall of this.walls) {
         if (
           this.posX < wall.x + wall.width &&
@@ -165,7 +165,6 @@ export default {
           this.posY < wall.y + wall.height &&
           this.posY + this.circleSize > wall.y
         ) {
-          // Si hay colisión con una pared revertir el movimiento
           this.posX = previousX;
           this.posY = previousY;
         }
@@ -174,14 +173,12 @@ export default {
     moverObstaculos() {
       setInterval(() => {
         for (let obstacle of this.obstacles) {
-          // Movimiento horizontal y vertical de los obstáculos
           obstacle.x += obstacle.dx * this.obstacleSpeed;
           obstacle.y += obstacle.dy * this.obstacleSpeed;
 
           const gameAreaWidth = this.$el.querySelector('.game-area').clientWidth;
           const gameAreaHeight = this.$el.querySelector('.game-area').clientHeight;
 
-          // Verificar los límites del área de juego
           if (obstacle.x <= 0 || obstacle.x >= gameAreaWidth - this.obstacleSize) {
             obstacle.dx = -obstacle.dx;
           }
@@ -189,7 +186,6 @@ export default {
             obstacle.dy = -obstacle.dy;
           }
 
-          // Verificar colisión con las paredes
           for (let wall of this.walls) {
             if (
               obstacle.x < wall.x + wall.width &&
@@ -205,58 +201,55 @@ export default {
       }, 100);
     },
     generarLaberinto() {
-      // Limpia paredes y obstáculos anteriores
       this.walls = [];
       this.obstacles = [];
 
-      // Función para generar una posición aleatoria sin solaparse
       const generateRandomPosition = (width, height) => {
         let x, y;
         let overlap;
         do {
-          x = Math.floor(Math.random() * (800 - width)); // Ajusta el tamaño de la área de juego
-          y = Math.floor(Math.random() * (600 - height)); // Ajusta el tamaño de la área de juego
+          x = Math.floor(Math.random() * (800 - width)); // tamaño del area de juego
+          y = Math.floor(Math.random() * (600 - height)); // tamaño del area de juego
           overlap = this.walls.some(wall => 
             x < wall.x + wall.width && x + width > wall.x && y < wall.y + wall.height && y + height > wall.y
           );
-        } while (overlap); // Reintentar si se solapa con una pared existente
+        } while (overlap); 
         return { x, y };
       };
 
-      // Generar paredes aleatorias
+      // paredes aleatorias
       for (let i = 0; i < 8; i++) {
         const { x, y } = generateRandomPosition(100, 30);
         this.walls.push({ x, y, width: 100, height: 30 });
       }
 
-      // Generar obstáculos sin solaparse con paredes
       for (let i = 0; i < this.obstacleCount; i++) {
         let x, y, dx, dy;
         let overlap;
         do {
-          x = Math.floor(Math.random() * (800 - this.obstacleSize)); // Ajusta el tamaño del área de juego
-          y = Math.floor(Math.random() * (600 - this.obstacleSize)); // Ajusta el tamaño del área de juego
-          dx = Math.random() < 0.5 ? 1 : -1; // Dirección inicial horizontal
-          dy = Math.random() < 0.5 ? 1 : -1; // Dirección inicial vertical
+          x = Math.floor(Math.random() * (800 - this.obstacleSize)); 
+          y = Math.floor(Math.random() * (600 - this.obstacleSize)); 
+          dx = Math.random() < 0.5 ? 1 : -1; 
+          dy = Math.random() < 0.5 ? 1 : -1; 
           overlap = this.walls.some(wall => 
             x < wall.x + wall.width && x + this.obstacleSize > wall.x && y < wall.y + wall.height && y + this.obstacleSize > wall.y
           );
-        } while (overlap); // Reintentar si se solapa con una pared
+        } while (overlap); 
         this.obstacles.push({ x, y, dx, dy });
       }
     },
     loseLife() {
       this.lives--;
       if (this.lives > 0) {
-        this.invulnerable = true; // Estado de invulnerabilidad temporal
+        this.invulnerable = true;
         setTimeout(() => {
-          this.invulnerable = false; // Terminar invulnerabilidad
-        }, 1000); // Duración de la invulnerabilidad
-        this.posX = 0; // Reiniciar posición del círculo
+          this.invulnerable = false; 
+        }, 1000); 
+        this.posX = 0; 
         this.posY = 0;
       } else {
         this.gameOver = true;
-        clearInterval(this.timer); // Detener el timer
+        clearInterval(this.timer); 
       }
     },
     startTimer() {
@@ -265,19 +258,19 @@ export default {
           this.timeLeft--;
         } else {
           this.loseLife();
-          this.timeLeft = 60; // Reiniciar tiempo por vida
+          this.timeLeft = 60;
         }
-      }, 1000); // Actualización cada segundo
+      }, 1000);
     },
     reiniciarJuego() {
       this.posX = 0;
       this.posY = 0;
       this.victory = false;
       this.gameOver = false;
-      this.lives = 3; // Reiniciar vidas
-      this.timeLeft = 60; // Reiniciar tiempo
-      this.generarLaberinto(); // Generar un nuevo laberinto
-      this.startTimer(); // Iniciar temporizador de nuevo
+      this.lives = 3; 
+      this.timeLeft = 60; 
+      this.generarLaberinto();
+      this.startTimer();
     },
   },
 };
