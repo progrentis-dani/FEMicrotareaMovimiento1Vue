@@ -9,6 +9,9 @@
         :style="{ top: wall.y + 'px', left: wall.x + 'px', width: wall.width + 'px', height: wall.height + 'px' }"
       ></div>
 
+      <!-- Pantallazo rojo -->
+      <div v-if="pantallazoRojo" class="pantallazo-rojo"></div>
+
       <!-- Area de info -->
       <div class="info">
         <!--timer y vidas-->
@@ -18,12 +21,12 @@
         </div>
         <!-- cruceta -->
         <div class="controls">
-          <button @click="cambiarDireccion('up')"> ↑ </button>
+          <button @click="cambiarDireccion('up')" :class="{'clicked':buttonClicked === 'up'}">↑</button>
           <div class="row">
-            <button @click="cambiarDireccion('left')">←</button>
-            <button @click="cambiarDireccion('right')">→</button>
+            <button @click="cambiarDireccion('left')" :class="{'clicked':buttonClicked === 'left'}">←</button>
+            <button @click="cambiarDireccion('right')" :class="{'clicked':buttonClicked === 'right'}">→</button>
           </div>
-          <button @click="cambiarDireccion('down')"> ↓ </button>
+          <button @click="cambiarDireccion('down')" :class="{'clicked':buttonClicked === 'down'}">↓</button>
         </div>
       </div>
 
@@ -60,13 +63,13 @@
         class="cherry"
         :style="{ top: cherryY + 'px', left: cherryX + 'px' }"
       ></div>
-    </div>
 
-    <!-- Mensaje -->
+      <!-- Mensaje -->
     <div v-if="gameOver" class="game-over">
       <h1 v-if="victory">¡Has ganado! 🍒</h1>
       <h1 v-else>¡Perdiste! 💀</h1>
-      <button @click="reiniciarJuego">↻</button>
+      <!--<button @click="reiniciarJuego">↻</button>-->
+    </div>
     </div>
   </div>
 </template>
@@ -82,7 +85,9 @@ export default {
       cherryX: 400, // Ajusta esta posición
       cherryY: 500, // Ajusta esta posición
       velocidad: 5,
-      direccionActual: 'right',
+      buttonClicked:null,
+      pantallazoRojo: false,
+      direccionActual: 'up',
       autoMoveInterval: null,
       walls: [], // Paredes
       obstacles: [], // Obstáculos 
@@ -105,9 +110,9 @@ export default {
     };
   },
   mounted() {
-    this.generarLaberinto(); // Inicializar paredes y obstáculos
+    this.generarLaberinto(); // Inicializar paredes y obstaculos
     this.autoMoveInterval = setInterval(this.mover, 50); // Movimiento automático
-    this.moverObstaculos(); // Movimiento de obstáculos
+    this.moverObstaculos(); // Movimiento de obstaculos
     this.startTimer(); // Iniciar timer
   },
   beforeUnmount() {
@@ -117,13 +122,17 @@ export default {
   methods: {
     cambiarDireccion(nuevaDireccion) {
       this.direccionActual = nuevaDireccion;
+      this.buttonClicked = nuevaDireccion;
+      setTimeout(() => {
+        this.buttonClicked = null;
+      }, 150);  // Tiempo para que el boton se mantenga rojo
     },
     mover() {
       if (this.gameOver) return;
       const previousX = this.posX;
       const previousY = this.posY;
 
-      // Movimiento automático del círculo
+      // Movimiento automatico
       switch (this.direccionActual) {
         case 'up':
           this.posY -= this.velocidad;
@@ -153,7 +162,7 @@ export default {
       if (this.posY > gameAreaHeight - this.circleSize) this.posY = gameAreaHeight - this.circleSize;
     },
     verificarColisiones(previousX, previousY) {
-      // Verificar colisión con el objetivo
+      // Verificar colision con el objetivo
       if (
         this.posX < this.cherryX + this.cellSize &&
         this.posX + this.circleSize > this.cherryX &&
@@ -165,7 +174,7 @@ export default {
         clearInterval(this.timer); // Detener timer
       }
 
-      // Verificar colisión con obstáculos
+      // Verificar colision con obstaculos
       if (!this.invulnerable) {
         for (let obstacle of this.obstacles) {
           if (
@@ -174,22 +183,22 @@ export default {
             this.posY < obstacle.y + this.obstacleSize &&
             this.posY + this.circleSize > obstacle.y
           ) {
-            this.loseLife(); // Perder una vida al chocar con un obstáculo
+            this.loseLife(); // Perder una vida
           }
         }
       }
-      // Verificar colisión con el suelo
+      // Verificar colision
       if (
         this.posX < this.suelo.x + this.suelo.width &&
         this.posX + this.circleSize > this.suelo.x &&
         this.posY < this.suelo.y + this.suelo.height &&
         this.posY + this.circleSize > this.suelo.y
       ) {
-        // Si hay colisión con el suelo, revertir el movimiento (si es necesario)
+        // Si hay colisin revertir el movimiento
         this.posY = this.suelo.y - this.circleSize;
       }
 
-      // Verificar colisión con paredes
+      // Verificar colision con paredes
       for (let wall of this.walls) {
         if (
           this.posX < wall.x + wall.width &&
@@ -197,7 +206,7 @@ export default {
           this.posY < wall.y + wall.height &&
           this.posY + this.circleSize > wall.y
         ) {
-          // Si hay colisión con una pared revertir el movimiento
+          // Si hay colision con una pared revertir el movimiento
           this.posX = previousX;
           this.posY = previousY;
         }
@@ -206,14 +215,14 @@ export default {
     moverObstaculos() {
   setInterval(() => {
     for (let obstacle of this.obstacles) {
-      // Movimiento de los obstáculos
+      // Movimiento de los obstaculos
       obstacle.x += obstacle.dx * this.obstacleSpeed;
       obstacle.y += obstacle.dy * this.obstacleSpeed;
 
       const gameAreaWidth = this.$el.querySelector('.game-area').clientWidth;
       const gameAreaHeight = this.$el.querySelector('.game-area').clientHeight;
 
-      // Verificar los límites del área de juego
+      // Verificar los limites del area de juego
       if (obstacle.x <= 0 || obstacle.x >= gameAreaWidth - this.obstacleSize) {
         obstacle.dx = -obstacle.dx; // Rebotar horizontalmente
       }
@@ -221,7 +230,7 @@ export default {
         obstacle.dy = -obstacle.dy; // Rebotar verticalmente
       }
 
-      // Verificar colisión con las paredes
+      // Verificar colision con las paredes
       for (let wall of this.walls) {
         if (
           obstacle.x < wall.x + wall.width &&
@@ -234,94 +243,114 @@ export default {
         }
       }
 
-      // Verificar colisión con el suelo
+      // colision con el suelo
       if (
         obstacle.x < this.suelo.x + this.suelo.width &&
         obstacle.x + this.obstacleSize > this.suelo.x &&
         obstacle.y + this.obstacleSize > this.suelo.y &&
         obstacle.y < this.suelo.y + this.suelo.height
       ) {
-        obstacle.dy = -obstacle.dy; // Rebotar en la dirección vertical
-        obstacle.y = this.suelo.y - this.obstacleSize; // Ajustar la posición del obstáculo para que quede justo sobre el suelo
+        obstacle.dy = -obstacle.dy; // rebotar 
+        obstacle.y = this.suelo.y - this.obstacleSize; 
       }
     }
   }, 100);
-}
-,
-    generarLaberinto() {
-  // Limpia paredes y obstáculos anteriores
+},
+
+  generarLaberinto() {
+  // limpiar paredes y obst
   this.walls = [];
   this.obstacles = [];
 
-  // Función para generar una posición aleatoria sin solaparse con el objetivo ni el círculo
   const generateRandomPosition = (width, height, avoidX, avoidY, avoidRadius = 0) => {
     let x, y;
     let overlap;
     do {
-      x = Math.floor(Math.random() * (800 - width)); // Ajusta el tamaño de la área de juego
-      y = Math.floor(Math.random() * (600 - height)); // Ajusta el tamaño de la área de juego
+      x = Math.floor(Math.random() * (800 - width)); 
+      y = Math.floor(Math.random() * (600 - height)); 
       overlap = this.walls.some(wall =>
         x < wall.x + wall.width && x + width > wall.x && y < wall.y + wall.height && y + height > wall.y
       ) || (Math.abs(x - avoidX) < avoidRadius && Math.abs(y - avoidY) < avoidRadius);
-    } while (overlap); // Reintentar si se solapa con una pared o está cerca del área prohibida
+    } while (overlap); 
     return { x, y };
   };
 
-  // Generar paredes aleatorias sin solaparse con el objetivo
   for (let i = 0; i < 8; i++) {
-    const { x, y } = generateRandomPosition(100, 30, this.cherryX, this.cherryY, 50);
-    this.walls.push({ x, y, width: 90, height: 30 });
-  }
+  const { x, y } = generateRandomPosition(100, 30, this.cherryX, this.cherryY, 50);
+  
+  const wallWidth = 90;
+  const wallHeight = 30;
+  const overlapWithCircle = (
+    this.posX < x + wallWidth &&
+    this.posX + this.circleSize > x &&
+    this.posY < y + wallHeight &&
+    this.posY + this.circleSize > y
+  );
 
-  // Generar obstáculos sin solaparse con paredes o cerca del círculo
+  if (!overlapWithCircle) {
+    this.walls.push({ x, y, width: 90, height: 30 });
+  } else {
+    i--; // reintentar si hay solapamiento
+  }
+}
+
+  // Generar obstaculos sin solaparse con paredes o cerca del circulo
   for (let i = 0; i < this.obstacleCount; i++) {
     let x, y, dx, dy;
     let overlap;
     do {
-      x = Math.floor(Math.random() * (800 - this.obstacleSize)); // Ajusta el tamaño del área de juego
-      y = Math.floor(Math.random() * (600 - this.obstacleSize)); // Ajusta el tamaño del área de juego
-      dx = Math.random() < 0.5 ? 1 : -1; // Dirección inicial horizontal
-      dy = Math.random() < 0.5 ? 1 : -1; // Dirección inicial vertical
+      x = Math.floor(Math.random() * (800 - this.obstacleSize)); 
+      y = Math.floor(Math.random() * (600 - this.obstacleSize)); 
+      dx = Math.random() < 0.5 ? 1 : -1; 
+      dy = Math.random() < 0.5 ? 1 : -1; 
       overlap = this.walls.some(wall =>
         x < wall.x + wall.width && x + this.obstacleSize > wall.x && y < wall.y + wall.height && y + this.obstacleSize > wall.y
-      ) || (Math.abs(x - this.posX) < 100 && Math.abs(y - this.posY) < 100); // Evita que esté cerca del círculo
-    } while (overlap); // Reintentar si se solapa con una pared o está cerca del círculo
+      ) || (Math.abs(x - this.posX) < 100 && Math.abs(y - this.posY) < 100); // evita que este cerca del círculo
+    } while (overlap); // reintentar si se solapa
     this.obstacles.push({ x, y, dx, dy });
   }
 },
 
     loseLife() {
-      this.lives--; // Reducir una vida
-      if (this.lives > 0) {
-        this.invulnerable = true; // Estado de invulnerabilidad temporal
-        setTimeout(() => {
-          this.invulnerable = false; // Terminar invulnerabilidad
-        }, 1000); // Duración de la invulnerabilidad
-        this.posX = 0; // Reiniciar posición del círculo
-        this.posY = 0;
+        this.lives--; // reducir una vida
+        if (this.lives > 0) {
+          this.invulnerable = true; 
+          setTimeout(() => {
+            this.invulnerable = false; 
+          }, 1000); 
+          this.posX = 0; 
+          this.posY = 0;
 
-        // Solo reiniciar los obstáculos
-        this.reiniciarObstaculos(); // Generar nuevos obstáculos sin cambiar las paredes
-      } else {
-        this.gameOver = true;
-        clearInterval(this.timer); // Detener el timer
-      }
-    },
+          this.direccionActual = 'up';  
+
+          this.pantallazoRojo = true; // mostrar el pantallazo rojo
+          setTimeout(() => {
+            this.pantallazoRojo = false; // ocultar el pantallazo 
+          }, 200);
+
+          this.mover();
+
+          // solo reiniciar los obstaculos
+          this.reiniciarObstaculos(); 
+        } else {
+          this.gameOver = true;
+          clearInterval(this.timer); // detener el timer
+        }
+      },
     reiniciarObstaculos() {
-      // Generar obstáculos sin tocar las paredes
-      this.obstacles = []; // Limpiar los obstáculos actuales
+      this.obstacles = [];
       for (let i = 0; i < this.obstacleCount; i++) {
         let x, y, dx, dy;
         let overlap;
         do {
-          x = Math.floor(Math.random() * (800 - this.obstacleSize)); // Ajusta el tamaño del área de juego
-          y = Math.floor(Math.random() * (600 - this.obstacleSize)); // Ajusta el tamaño del área de juego
-          dx = Math.random() < 0.5 ? 1 : -1; // Dirección inicial horizontal
-          dy = Math.random() < 0.5 ? 1 : -1; // Dirección inicial vertical
+          x = Math.floor(Math.random() * (800 - this.obstacleSize)); // ajusta el tamaño del area de juego
+          y = Math.floor(Math.random() * (600 - this.obstacleSize)); // ajusta el tamaño del area de juego
+          dx = Math.random() < 0.5 ? 1 : -1; // direccion inicial horizontal
+          dy = Math.random() < 0.5 ? 1 : -1; // direccion inicial vertical
           overlap = this.walls.some(wall =>
             x < wall.x + wall.width && x + this.obstacleSize > wall.x && y < wall.y + wall.height && y + this.obstacleSize > wall.y
-          ) || (Math.abs(x - this.posX) < 100 && Math.abs(y - this.posY) < 100); // Evita que esté cerca del círculo
-        } while (overlap); // Reintentar si se solapa con una pared o está cerca del círculo
+          ) || (Math.abs(x - this.posX) < 100 && Math.abs(y - this.posY) < 100); // evita que este cerca del circulo
+        } while (overlap); // reintentar si se solapa con una pared o está cerca del circulo
         this.obstacles.push({ x, y, dx, dy });
       }
     },
@@ -335,7 +364,7 @@ export default {
         }
       }, 1000); // Actualización cada segundo
     },
-    reiniciarJuego() {
+    /*reiniciarJuego() {
       this.posX = 0;
       this.posY = 0;
       this.victory = false;
@@ -344,7 +373,7 @@ export default {
       this.timeLeft = 60; // Reiniciar tiempo
       this.generarLaberinto(); // Generar un nuevo laberinto
       this.startTimer(); // Iniciar temporizador de nuevo
-    },
+    },*/
   },
 };
 </script>
@@ -358,8 +387,7 @@ export default {
   /*background-color: green;*/
 }
 .controls {
-  position: absolute; /* Esto posiciona la cruceta de forma absoluta dentro de la game-area */
-  /*top: 10%; /* Centra verticalmente la cruceta dentro de la game-area */
+  position: absolute;
   transform: translateY(100%);
   width: 70%;
   margin:10%;
@@ -401,9 +429,9 @@ button {
   transition: background-color 0.3s, transform 0.2s;
 }
 
-button:hover {
-  background-color: #444;
-  transform: scale(1.1);
+button.clicked {
+  background-color: red !important;  /* Cambia el fondo a rojo */
+  border-color: red;  /* Opcional: cambia el borde también a rojo */
 }
 
 .status {
@@ -463,6 +491,13 @@ button:hover {
   right: 105px;
   border: 2px solid #000;
   margin: 20px auto;
+}
+.pantallazo-rojo {
+  position: absolute;
+  width: 800px;
+  height: 600px;
+  background-color: rgba(245, 90, 90, 0.6);
+  z-index: 1000; /* Asegura que esté por encima de todos los elementos */
 }
 .circle {
   position: absolute;
