@@ -257,8 +257,7 @@ export default {
   }, 100);
 },
 
-  generarLaberinto() {
-  // limpiar paredes y obst
+generarLaberinto() {
   this.walls = [];
   this.obstacles = [];
 
@@ -275,26 +274,21 @@ export default {
     return { x, y };
   };
 
+  const zonaSeguraY = 2 * this.circleSize; 
+
   for (let i = 0; i < 8; i++) {
-  const { x, y } = generateRandomPosition(100, 30, this.cherryX, this.cherryY, 50);
-  
-  const wallWidth = 90;
-  const wallHeight = 30;
-  const overlapWithCircle = (
-    this.posX < x + wallWidth &&
-    this.posX + this.circleSize > x &&
-    this.posY < y + wallHeight &&
-    this.posY + this.circleSize > y
-  );
+    const { x, y } = generateRandomPosition(100, 30, this.cherryX, this.cherryY, 2 * this.circleSize); 
 
-  if (!overlapWithCircle) {
-    this.walls.push({ x, y, width: 90, height: 30 });
-  } else {
-    i--; // reintentar si hay solapamiento
+    const wallWidth = 90;
+    const wallHeight = 30;
+
+    if (y + wallHeight > zonaSeguraY) {
+      this.walls.push({ x, y, width: wallWidth, height: wallHeight });
+    } else {
+      i--; 
+    }
   }
-}
 
-  // Generar obstaculos sin solaparse con paredes o cerca del circulo
   for (let i = 0; i < this.obstacleCount; i++) {
     let x, y, dx, dy;
     let overlap;
@@ -305,12 +299,13 @@ export default {
       dy = Math.random() < 0.5 ? 1 : -1; 
       overlap = this.walls.some(wall =>
         x < wall.x + wall.width && x + this.obstacleSize > wall.x && y < wall.y + wall.height && y + this.obstacleSize > wall.y
-      ) || (Math.abs(x - this.posX) < 100 && Math.abs(y - this.posY) < 100); // evita que este cerca del círculo
-    } while (overlap); // reintentar si se solapa
+      ) || (Math.abs(x - this.posX) < 100 && Math.abs(y - this.posY) < 100); 
+    } while (overlap); 
+
     this.obstacles.push({ x, y, dx, dy });
   }
-},
-
+}
+,
     loseLife() {
         this.lives--; // reducir una vida
         if (this.lives > 0) {
